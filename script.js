@@ -44,29 +44,50 @@ Bike.countCall();
 const titleEl = document.getElementById('title');
 const loaderEl = document.getElementById('loader');
 const cardContainer = document.getElementById('cardContainer');
+
 function loadMenu(menuType) {
-      titleEl.textContent = `You're viewing: ${menuType.charAt(0).toUpperCase() + menuType.slice(1)}`;
-      loaderEl.style.display = 'block';
-      cardContainer.innerHTML = '';
-      fetch(`https://forkify-api.herokuapp.com/api/search?q=${menuType}`)
-        .then(res => res.json())
-        .then(data => {
-          const recipes = data.recipes;
-          loaderEl.style.display = 'none';
-          recipes.forEach(recipe => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-              <img src="${recipe.image_url}" alt="${recipe.title}">
-              <h4>${recipe.title}</h4>
-              <p><strong>Publisher:</strong> ${recipe.publisher}</p>
-            `;
-            cardContainer.appendChild(card);
-          });
-        })
-        .catch(error => {
-          loaderEl.style.display = 'none';
-          cardContainer.innerHTML = `<p style="color:red">Error loading ${menuType} items.</p>`;
-          console.error(error);
-        });
-    }
+  setTitle(menuType);
+  setLoading(true);
+  cardContainer.innerHTML = '';
+  getMenuData(menuType)
+    .then(displayMenuData)
+    .catch(err => {
+      cardContainer.innerHTML = `<p style="color:red">Error loading ${menuType} items.</p>`;
+      console.error(err);
+    })
+    .finally(() => setLoading(false));
+}
+function getMenuData(menuType) {
+  const url = `https://forkify-api.herokuapp.com/api/search?q=${menuType}`;
+  return fetch(url).then(res => res.json()).then(data => data.recipes);
+}
+
+function displayMenuData(recipes) {
+  recipes.forEach(recipe => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${recipe.image_url}" alt="${recipe.title}">
+      <h4>${recipe.title}</h4>
+      <p><strong>Publisher:</strong> ${recipe.publisher}</p>
+    `;
+    cardContainer.appendChild(card);
+  });
+}
+
+function setLoading(isLoading) {
+  loaderEl.style.display = isLoading ? 'block' : 'none';
+}
+
+function setTitle(menuType) {
+  titleEl.textContent = `You're viewing: ${menuType.charAt(0).toUpperCase() + menuType.slice(1)}`;
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll('.menu-buttons button');
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const menuType = button.getAttribute('data-menu');
+      loadMenu(menuType);
+    });
+  });
+});
