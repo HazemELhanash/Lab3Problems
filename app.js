@@ -1,24 +1,4 @@
 "use strict";
-function renderTasks() {
-    const taskList = document.getElementById("taskList");
-    taskList.innerHTML = "";
-    tasks.forEach(task => {
-        const li = document.createElement("li");
-        li.className = "task" + (task.completed ? " completed" : "");
-        li.innerHTML = `
-      <div class="task-info">
-        <div class="task-title">${task.title}</div>
-        <div class="task-desc">${task.description}</div>
-      </div>
-      <div class="task-actions">
-        <button onclick="markCompleted(${task.id})" title="Complete ✅">✔️</button>
-        <button onclick="editTask(${task.id})" title="Edit ✏️">✏️</button>
-        <button onclick="deleteTask(${task.id})" title="Delete ❌">🗑️</button>
-      </div>
-    `;
-        taskList.appendChild(li);
-    });
-}
 const taskForm = document.getElementById("taskForm");
 const titleInput = document.getElementById("title");
 const descInput = document.getElementById("description");
@@ -27,7 +7,7 @@ let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
 let isEditing = false;
 let editingId = null;
 renderTasks();
-taskForm.onsubmit = (e) => {
+taskForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const title = titleInput.value.trim();
     const description = descInput.value.trim();
@@ -54,13 +34,61 @@ taskForm.onsubmit = (e) => {
     titleInput.value = '';
     descInput.value = '';
     renderTasks();
-};
-window.markCompleted = (id) => {
+});
+function renderTasks() {
+    taskList.innerHTML = "";
+    tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = "task" + (task.completed ? " completed" : "");
+        const infoDiv = document.createElement("div");
+        infoDiv.className = "task-info";
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "task-title";
+        titleDiv.textContent = task.title;
+        const descDiv = document.createElement("div");
+        descDiv.className = "task-desc";
+        descDiv.textContent = task.description;
+        infoDiv.appendChild(titleDiv);
+        infoDiv.appendChild(descDiv);
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "task-actions";
+        // Mark Completed Button
+        const completeBtn = document.createElement("button");
+        completeBtn.title = "Complete ✅";
+        completeBtn.textContent = "✔️";
+        completeBtn.addEventListener("click", () => {
+            markCompleted(task.id);
+        });
+        // Edit Button
+        const editBtn = document.createElement("button");
+        editBtn.title = "Edit ✏️";
+        editBtn.textContent = "✏️";
+        editBtn.addEventListener("click", () => {
+            editTask(task.id);
+        });
+        // Delete Button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.title = "Delete ❌";
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.addEventListener("click", () => {
+            deleteTask(task.id);
+        });
+        actionsDiv.appendChild(completeBtn);
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+        li.appendChild(infoDiv);
+        li.appendChild(actionsDiv);
+        taskList.appendChild(li);
+    });
+}
+// Mark completed
+function markCompleted(id) {
     tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task);
     localStorage.setItem('tasks', JSON.stringify(tasks));
     renderTasks();
-};
-window.editTask = (id) => {
+}
+// Edit task
+function editTask(id) {
     const task = tasks.find(t => t.id === id);
     if (!task)
         return;
@@ -69,9 +97,10 @@ window.editTask = (id) => {
     isEditing = true;
     editingId = id;
     document.getElementById('submitBtn').textContent = "Save Task";
-};
-window.deleteTask = (id) => {
+}
+// Delete task
+function deleteTask(id) {
     tasks = tasks.filter(t => t.id !== id);
     localStorage.setItem('tasks', JSON.stringify(tasks));
     renderTasks();
-};
+}
